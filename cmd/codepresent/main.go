@@ -11,12 +11,14 @@ import (
 	"github.com/cyberbeast/codepresent/pkg/bridge"
 	"github.com/cyberbeast/codepresent/pkg/mcpserver"
 	"github.com/cyberbeast/codepresent/pkg/presentation"
+	"github.com/cyberbeast/codepresent/pkg/tui"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 func main() {
 	wsAddr := flag.String("ws-addr", "127.0.0.1:9123", "WebSocket address for editor display drivers")
 	demoMode := flag.Bool("demo", false, "Run a built-in demo presentation without starting MCP stdio")
+	tuiMode := flag.Bool("tui", false, "Launch the Bubble Tea terminal presentation viewer")
 	flag.Parse()
 
 	log.SetOutput(os.Stderr)
@@ -24,6 +26,14 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	if *tuiMode && !*demoMode {
+		wsURL := "ws://" + *wsAddr + "/ws"
+		if err := tui.RunWS(ctx, wsURL); err != nil {
+			log.Fatalf("TUI exited with error: %v", err)
+		}
+		return
+	}
 
 	engine := presentation.NewEngine()
 	wsBridge := bridge.NewWSBridge(engine)
@@ -39,6 +49,12 @@ func main() {
 		log.Println("Demo mode active: loading built-in codepresent walkthrough on Step 1...")
 		if err := engine.LoadStory(demoStory(), false); err != nil {
 			log.Fatalf("Failed to load demo story: %v", err)
+		}
+		if *tuiMode {
+			if err := tui.Run(ctx, engine); err != nil {
+				log.Fatalf("TUI exited with error: %v", err)
+			}
+			return
 		}
 		<-ctx.Done()
 		return
@@ -60,8 +76,8 @@ func demoStory() presentation.Story {
 		Steps: []presentation.Step{
 			{
 				FilePath:        "cmd/codepresent/main.go",
-				StartLine:       28,
-				EndLine:         36,
+				StartLine:       38,
+				EndLine:         46,
 				FocusTarget:     "presentation.NewEngine + bridge.NewWSBridge",
 				Title:           "1. Engine & WebSocket Bridge",
 				Narration:       "The entrypoint creates a single presentation.Engine and attaches a local WebSocket bridge on 127.0.0.1:9123 so VS Code can subscribe to live step events.",
