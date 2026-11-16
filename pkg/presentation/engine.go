@@ -26,10 +26,12 @@ type Event struct {
 // State is a point-in-time snapshot of the presentation engine.
 type State struct {
 	StoryTitle       string `json:"story_title"`
+	WorkspaceRoot    string `json:"workspace_root,omitempty"`
 	CurrentStepIndex int    `json:"current_step_index"`
 	TotalSteps       int    `json:"total_steps"`
 	IsPlaying        bool   `json:"is_playing"`
 	CurrentStep      *Step  `json:"current_step,omitempty"`
+	Steps            []Step `json:"steps,omitempty"`
 }
 
 // Engine manages the lifecycle, navigation, and auto-play timer for a code presentation.
@@ -217,12 +219,15 @@ func (e *Engine) stateLocked() State {
 		return State{}
 	}
 	step := e.story.Steps[e.currentIndex]
+	stepsCopy := append([]Step(nil), e.story.Steps...)
 	return State{
 		StoryTitle:       e.story.Title,
+		WorkspaceRoot:    e.story.WorkspaceRoot,
 		CurrentStepIndex: e.currentIndex,
 		TotalSteps:       len(e.story.Steps),
 		IsPlaying:        e.isPlaying,
 		CurrentStep:      &step,
+		Steps:            stepsCopy,
 	}
 }
 

@@ -137,3 +137,28 @@ func TestEngineNavigationAndPlayPause(t *testing.T) {
 		t.Fatalf("expected EventPaused, got %+v", evt)
 	}
 }
+
+func TestEngineGoToAndStop(t *testing.T) {
+	eng := NewEngine()
+	if err := eng.LoadStory(sampleStory(), false); err != nil {
+		t.Fatalf("LoadStory failed: %v", err)
+	}
+
+	if err := eng.GoTo(1); err != nil {
+		t.Fatalf("GoTo(1) failed: %v", err)
+	}
+	st := eng.State()
+	if st.CurrentStepIndex != 1 || len(st.Steps) != 2 {
+		t.Fatalf("unexpected state after GoTo(1): %+v", st)
+	}
+
+	if err := eng.GoTo(99); err == nil {
+		t.Fatal("expected GoTo(99) to return out-of-range error")
+	}
+
+	eng.Stop()
+	st = eng.State()
+	if st.TotalSteps != 0 || st.CurrentStep != nil || st.IsPlaying {
+		t.Fatalf("expected cleared state after Stop(), got %+v", st)
+	}
+}

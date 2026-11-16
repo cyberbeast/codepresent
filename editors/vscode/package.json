@@ -1,0 +1,72 @@
+{
+  "name": "codepresent-vscode",
+  "displayName": "codepresent",
+  "description": "Lightweight VS Code display driver for the codepresent AI presentation engine",
+  "version": "0.1.0",
+  "publisher": "cyberbeast",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codepresent.connect",
+        "title": "codepresent: Connect to Server"
+      },
+      {
+        "command": "codepresent.play",
+        "title": "codepresent: Play"
+      },
+      {
+        "command": "codepresent.pause",
+        "title": "codepresent: Pause"
+      },
+      {
+        "command": "codepresent.next",
+        "title": "codepresent: Next Step"
+      },
+      {
+        "command": "codepresent.prev",
+        "title": "codepresent: Previous Step"
+      },
+      {
+        "command": "codepresent.stop",
+        "title": "codepresent: Stop Presentation"
+      }
+    ],
+    "configuration": {
+      "title": "codepresent",
+      "properties": {
+        "codepresent.serverUrl": {
+          "type": "string",
+          "default": "ws://127.0.0.1:9123/ws",
+          "description": "WebSocket URL of the running codepresent Go server"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile && node --test out/renderer.test.js"
+  },
+  "dependencies": {
+    "highlight.js": "^11.12.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@types/ws": "^8.5.10",
+    "typescript": "^5.4.0"
+  }
+}
