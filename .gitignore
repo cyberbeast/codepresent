@@ -1,0 +1,27 @@
+# Binaries & build artifacts
+bin/
+dist/
+out/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.vsix
+
+# Dependencies
+node_modules/
+vendor/
+
+# OS and Editor files
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode-test/
+
+# Environment files
+.env
+.env.local
