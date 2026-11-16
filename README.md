@@ -10,6 +10,7 @@ Instead of dumping static text snippets into a chat window, `codepresent` allows
 - **`pkg/presentation/`**: Thread-safe `Engine` managing `Story` validation, step navigation, auto-advance timers, and event broadcasting.
 - **`pkg/mcpserver/`**: MCP server built on the official Go SDK (`github.com/modelcontextprotocol/go-sdk`), exposing `present_code_story`, `control_presentation`, and `get_presentation_status`.
 - **`pkg/bridge/`**: Local WebSocket server (`ws://127.0.0.1:9123/ws` by default) that streams presentation events to connected editor display drivers and dispatches playback commands back to the engine.
+- **`pkg/tui/`**: Bubble Tea terminal presentation viewer (`chroma/v2` syntax highlighting, per-step colors, and a Unicode box-drawing connector).
 - **`editors/vscode/`**: VS Code / Cursor extension display driver rendering the unified storyboard, syntax-highlighted code spotlight, per-step color palette, and live SVG Bezier connector.
 
 ## Prerequisites
@@ -35,9 +36,18 @@ npm --prefix editors/vscode install
 npm --prefix editors/vscode test
 ```
 
-### 2. Interactive Local Demo (`F5`)
+### 2. Interactive Local Demo (`F5` or Terminal TUI)
 
 You can test the full end-to-end presentation experience against this repository using the built-in `--demo` walkthrough:
+
+#### Option A: Terminal TUI (Bubble Tea)
+```bash
+go run ./cmd/codepresent --demo --tui
+```
+* Controls: `space`/`p` (play/pause), `←`/`→` or `h`/`l` (prev/next), `↑`/`↓` or `j`/`k` (scroll), `1`–`9` (jump to step), `q` (quit).
+* To attach the TUI to a separate running `codepresent` MCP server over WebSocket, run `go run ./cmd/codepresent --tui`.
+
+#### Option B: VS Code / Cursor Extension (`F5`)
 
 1. Start the Go server in demo mode:
    ```bash
@@ -71,10 +81,11 @@ Configure your MCP client (e.g., Claude Desktop, Cursor, or CLI agent) to run `b
 Optional flags:
 - `--ws-addr`: WebSocket address for editor display drivers (default `127.0.0.1:9123`).
 - `--demo`: Load the built-in 3-step self-tour without starting the MCP stdio server.
+- `--tui`: Launch the Bubble Tea terminal presentation viewer (standalone with `--demo`, or connected via WebSocket to `--ws-addr`).
 
 ## Roadmap
 
 - [x] Go MCP Server implementation using official SDK
 - [x] Local two-way WebSocket bridge (`pkg/bridge`)
 - [x] VS Code Extension with unified storyboard, spotlighting, and SVG connector
-- [ ] Terminal TUI presentation mode with Bubble Tea (`pkg/tui`)
+- [x] Terminal TUI presentation mode with Bubble Tea (`pkg/tui`)
