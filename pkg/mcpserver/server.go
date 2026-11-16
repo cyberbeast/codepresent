@@ -33,7 +33,7 @@ func NewServer(engine *presentation.Engine) *mcp.Server {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "present_code_story",
-		Description: "Launch an interactive, step-by-step highlighted code presentation in the connected editor or terminal.",
+		Description: "Launch an interactive, step-by-step highlighted code presentation in the connected editor or terminal. Prefer focused 5-15 line steps (breaking long functions into multiple sub-steps) for clearer visual spotlighting.",
 	}, func(_ context.Context, _ *mcp.CallToolRequest, in PresentStoryInput) (*mcp.CallToolResult, any, error) {
 		autoPlay := true
 		if in.AutoPlay != nil {
