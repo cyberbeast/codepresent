@@ -1,3 +1,4 @@
+import * as fsSync from 'fs';
 import * as fs from 'fs/promises';
 import * as vscode from 'vscode';
 import WebSocket from 'ws';
@@ -7,6 +8,11 @@ import {
 	renderCanvasHtml,
 	resolveStepFilePath,
 } from './renderer';
+import {
+	defaultRegistryDir,
+	listActiveSessions,
+	selectSessionForWorkspace,
+} from './sessions';
 
 export function activate(context: vscode.ExtensionContext) {
 	const controller = new CodePresentController(context);
@@ -30,7 +36,10 @@ export function deactivate() {
 
 class CodePresentController implements vscode.Disposable {
 	private ws: WebSocket | undefined;
+	private currentWsUrl: string | undefined;
 	private reconnectTimer: NodeJS.Timeout | undefined;
+	private discoveryTimer: NodeJS.Timeout | undefined;
+	private registryWatcher: fsSync.FSWatcher | undefined;
 	private disposed = false;
 
 	private panel: vscode.WebviewPanel | undefined;
@@ -80,15 +89,52 @@ class CodePresentController implements vscode.Disposable {
 			return;
 		}
 		this.clearReconnect();
-		if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+		this.ensureRegistryWatcher();
+		void this.discoverAndConnect();
+	}
+
+	private async discoverAndConnect(): Promise<void> {
+		if (this.disposed) {
 			return;
 		}
 
-		const serverUrl = vscode.workspace.getConfiguration('codepresent').get<string>(
-			'serverUrl',
-			'ws://127.0.0.1:9123/ws'
-		);
+		const configuredUrl = vscode.workspace
+			.getConfiguration('codepresent')
+			.get<string>('serverUrl', '')
+			.trim();
 
+		let targetUrl = configuredUrl;
+		if (!targetUrl) {
+			const sessions = await listActiveSessions(defaultRegistryDir());
+			const folderPaths = (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath);
+			const matched = selectSessionForWorkspace(sessions, folderPaths);
+			if (!matched) {
+				this.connStatusItem.text = '$(plug) codepresent: waiting for session';
+				this.scheduleReconnect();
+				return;
+			}
+			targetUrl = matched.ws_url;
+		}
+
+		if (
+			this.ws &&
+			this.currentWsUrl === targetUrl &&
+			(this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)
+		) {
+			return;
+		}
+
+		if (this.ws) {
+			this.ws.removeAllListeners();
+			this.ws.close();
+			this.ws = undefined;
+		}
+
+		this.connectToUrl(targetUrl);
+	}
+
+	private connectToUrl(serverUrl: string): void {
+		this.currentWsUrl = serverUrl;
 		this.output.appendLine(`Connecting to ${serverUrl}...`);
 		this.connStatusItem.text = '$(sync~spin) codepresent: connecting';
 
@@ -110,14 +156,38 @@ class CodePresentController implements vscode.Disposable {
 		});
 
 		socket.on('close', () => {
-			this.ws = undefined;
-			this.connStatusItem.text = '$(plug) codepresent: waiting for server';
+			if (this.ws === socket) {
+				this.ws = undefined;
+				this.currentWsUrl = undefined;
+			}
+			this.connStatusItem.text = '$(plug) codepresent: waiting for session';
 			this.scheduleReconnect();
 		});
 
 		socket.on('error', (err: Error) => {
 			this.output.appendLine(`WebSocket error: ${err.message}`);
 		});
+	}
+
+	private ensureRegistryWatcher(): void {
+		if (this.registryWatcher || this.disposed) {
+			return;
+		}
+		const dir = defaultRegistryDir();
+		fsSync.mkdirSync(dir, { recursive: true });
+		try {
+			this.registryWatcher = fsSync.watch(dir, () => {
+				if (this.discoveryTimer) {
+					clearTimeout(this.discoveryTimer);
+				}
+				this.discoveryTimer = setTimeout(() => {
+					this.discoveryTimer = undefined;
+					void this.discoverAndConnect();
+				}, 100);
+			});
+		} catch (err) {
+			this.output.appendLine(`Failed to watch session registry: ${String(err)}`);
+		}
 	}
 
 	public sendCommand(action: 'play' | 'pause' | 'next' | 'prev' | 'stop' | 'goto', stepIndex?: number): void {
@@ -268,6 +338,14 @@ class CodePresentController implements vscode.Disposable {
 	public dispose(): void {
 		this.disposed = true;
 		this.clearReconnect();
+		if (this.discoveryTimer) {
+			clearTimeout(this.discoveryTimer);
+			this.discoveryTimer = undefined;
+		}
+		if (this.registryWatcher) {
+			this.registryWatcher.close();
+			this.registryWatcher = undefined;
+		}
 		this.clearPresentation();
 		this.prevBtn.dispose();
 		this.playPauseBtn.dispose();

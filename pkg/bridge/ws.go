@@ -132,6 +132,13 @@ func (b *WSBridge) dispatchCommand(cmd ClientCommand) {
 	}
 }
 
+// ClientCount returns the number of currently connected WebSocket display drivers.
+func (b *WSBridge) ClientCount() int {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return len(b.clients)
+}
+
 func (b *WSBridge) addClient(conn *websocket.Conn) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
