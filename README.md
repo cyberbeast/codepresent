@@ -60,6 +60,8 @@ go run ./cmd/codepresent --demo --tui
    - `.vscode/launch.json` launches an Extension Development Host window that connects to `ws://127.0.0.1:9123/ws`.
 3. Use **Play / Pause / Prev / Next / Stop** or click any step in the left storyboard timeline to jump between files and spotlighted code ranges.
 
+![codepresent VS Code extension demo](docs/vscode-demo.gif)
+
 ### 3. Connecting an MCP Client
 
 Build the binary:
