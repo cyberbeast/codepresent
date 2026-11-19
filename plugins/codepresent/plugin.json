@@ -1,0 +1,12 @@
+{
+  "name": "codepresent",
+  "displayName": "codepresent",
+  "description": "Interactive, step-by-step code presentation and walkthrough engine for AI agents via MCP.",
+  "version": "0.1.0",
+  "repository": "https://github.com/cyberbeast/codepresent",
+  "suggestedPrompts": [
+    "Use codepresent to walk me through cmd/codepresent/main.go step by step",
+    "Present how the presentation engine and WebSocket bridge work together",
+    "Pause the active codepresent walkthrough and jump to step 2"
+  ]
+}
