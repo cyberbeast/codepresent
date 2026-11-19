@@ -11,7 +11,8 @@ Instead of dumping static text snippets into a chat window, `codepresent` allows
 - **`pkg/mcpserver/`**: MCP server built on the official Go SDK (`github.com/modelcontextprotocol/go-sdk`), exposing `present_code_story`, `control_presentation`, and `get_presentation_status`.
 - **`pkg/bridge/`**: Local WebSocket server (`ws://127.0.0.1:9123/ws` by default) that streams presentation events to connected editor display drivers and dispatches playback commands back to the engine.
 - **`pkg/tui/`**: Bubble Tea terminal presentation viewer (`chroma/v2` syntax highlighting, per-step colors, and a Unicode box-drawing connector).
-- **`editors/vscode/`**: VS Code / Cursor extension display driver rendering the unified storyboard, syntax-highlighted code spotlight, per-step color palette, and live SVG Bezier connector.
+- **`editors/vscode/`**: VS Code / Antigravity IDE / Cursor extension display driver rendering the unified storyboard, syntax-highlighted code spotlight, per-step color palette, and live SVG Bezier connector.
+- **`plugins/codepresent/`**: Antigravity plugin bundle (`plugin.json`, `mcp_config.json`, and `skills/codepresent/SKILL.md`) for driving `codepresent` from Antigravity agents.
 
 ## Prerequisites
 
@@ -86,6 +87,23 @@ Optional flags:
 - `--ws-addr`: WebSocket address for editor display drivers (default `127.0.0.1:9123`).
 - `--demo`: Load the built-in 3-step self-tour without starting the MCP stdio server.
 - `--tui`: Launch the Bubble Tea terminal presentation viewer (standalone with `--demo`, or connected via WebSocket to `--ws-addr`).
+
+### 4. Antigravity & Antigravity IDE Integration
+
+To build `bin/codepresent`, install the Antigravity plugin (`~/.gemini/config/plugins/codepresent`), and package + install the display driver extension into **Antigravity IDE** in one step:
+
+```bash
+make install-antigravity
+```
+
+Individual targets are also available:
+- `make install-plugin` — installs the Antigravity plugin (`mcp_config.json` + `codepresent` skill) to `~/.gemini/config/plugins/codepresent`.
+- `make install-antigravity-ide` — packages `editors/vscode` into `dist/codepresent-vscode.vsix` and installs it via `antigravity-ide --install-extension`.
+- `make install-vscode` — packages and installs the `.vsix` into VS Code (`code --install-extension`).
+
+After running `make install-antigravity`, reload **Antigravity IDE** (or run `codepresent: Connect to Server` from the Command Palette) and ensure the `codepresent` plugin is enabled in Antigravity Customizations.
+
+![codepresent Antigravity IDE demo](docs/antigravity-demo.gif)
 
 ## Roadmap
 

@@ -57,7 +57,8 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "npm run compile && node --test out/renderer.test.js"
+    "test": "npm run compile && node --test out/renderer.test.js",
+    "package": "npx --yes @vscode/vsce package --allow-missing-repository"
   },
   "dependencies": {
     "highlight.js": "^11.12.0",
