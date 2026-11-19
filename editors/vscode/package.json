@@ -47,8 +47,8 @@
       "properties": {
         "codepresent.serverUrl": {
           "type": "string",
-          "default": "ws://127.0.0.1:9123/ws",
-          "description": "WebSocket URL of the running codepresent Go server"
+          "default": "",
+          "description": "Optional WebSocket URL override for the codepresent Go server (leave empty to auto-discover via ~/.codepresent/sessions)"
         }
       }
     }
@@ -57,7 +57,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "npm run compile && node --test out/renderer.test.js",
+    "test": "npm run compile && node --test out/renderer.test.js out/sessions.test.js",
     "package": "npx --yes @vscode/vsce package --allow-missing-repository"
   },
   "dependencies": {

@@ -6,12 +6,49 @@ Instead of dumping static text snippets into a chat window, `codepresent` allows
 
 ## Architecture
 
-- **`cmd/codepresent/`**: CLI & MCP server entrypoint (`stdio` MCP transport + local WebSocket bridge).
+**codepresent** is a decoupled presentation layer that AI agents can drive from **Terminal (`agy` CLI)**, **Agentic**, or **IDE** workflows:
+
+```mermaid
+flowchart LR
+    subgraph AI["AI Contexts (MCP over stdio)"]
+        CLI["Terminal CLI (agy)"]
+        AG["Agentic / Subagents"]
+        IDE_AI["IDE Agent"]
+    end
+
+    subgraph CORE["codepresent Presentation Layer"]
+        MCP["MCP Server + Engine"]
+        WS["WebSocket Bridge (127.0.0.1:0)"]
+        REG["Session Registry (~/.codepresent/sessions)"]
+    end
+
+    subgraph UI["Display Drivers"]
+        TUI["Terminal TUI (--tui)"]
+        EXT["IDE Extension (Antigravity / VS Code)"]
+        WIN["Standalone Viewer (e.g. Wails)"]
+    end
+
+    CLI --> MCP
+    AG --> MCP
+    IDE_AI --> MCP
+    MCP --> WS
+    MCP --> REG
+    REG -. "auto-discover & workspace match" .-> TUI
+    REG -. "auto-discover & workspace match" .-> EXT
+    WS <--> TUI
+    WS <--> EXT
+    WS <--> WIN
+```
+
+Each `codepresent` MCP process binds an ephemeral local port (`127.0.0.1:0`) and registers `{ pid, ws_url, workspace_root, story_title }` in `~/.codepresent/sessions/<pid>.json`, so multiple concurrent sessions never collide on ports and display drivers automatically attach to the matching workspace.
+
+- **`cmd/codepresent/`**: CLI & MCP server entrypoint (`stdio` MCP transport + local WebSocket bridge + session discovery).
 - **`pkg/presentation/`**: Thread-safe `Engine` managing `Story` validation, step navigation, auto-advance timers, and event broadcasting.
 - **`pkg/mcpserver/`**: MCP server built on the official Go SDK (`github.com/modelcontextprotocol/go-sdk`), exposing `present_code_story`, `control_presentation`, and `get_presentation_status`.
-- **`pkg/bridge/`**: Local WebSocket server (`ws://127.0.0.1:9123/ws` by default) that streams presentation events to connected editor display drivers and dispatches playback commands back to the engine.
+- **`pkg/bridge/`**: Local WebSocket server (`ws://127.0.0.1:<port>/ws`) that streams presentation events to connected display drivers and dispatches playback commands back to the engine.
+- **`pkg/registry/`**: File-based session registry (`~/.codepresent/sessions/<pid>.json`) for zero-collision multi-session discovery and workspace matching.
 - **`pkg/tui/`**: Bubble Tea terminal presentation viewer (`chroma/v2` syntax highlighting, per-step colors, and a Unicode box-drawing connector).
-- **`editors/vscode/`**: VS Code / Antigravity IDE / Cursor extension display driver rendering the unified storyboard, syntax-highlighted code spotlight, per-step color palette, and live SVG Bezier connector.
+- **`editors/vscode/`**: VS Code / Antigravity IDE / Cursor extension display driver that auto-discovers matching workspace sessions and renders the unified storyboard, syntax-highlighted code spotlight, per-step color palette, and live SVG Bezier connector.
 - **`plugins/codepresent/`**: Antigravity plugin bundle (`plugin.json`, `mcp_config.json`, and `skills/codepresent/SKILL.md`) for driving `codepresent` from Antigravity agents.
 
 ## Prerequisites
@@ -84,9 +121,9 @@ Configure your MCP client (e.g., Claude Desktop, Cursor, or CLI agent) to run `b
 ```
 
 Optional flags:
-- `--ws-addr`: WebSocket address for editor display drivers (default `127.0.0.1:9123`).
+- `--ws-addr`: Optional WebSocket address override (default: auto-bind `127.0.0.1:0` in server/demo mode, or auto-discover via `~/.codepresent/sessions` in `--tui` mode).
 - `--demo`: Load the built-in 3-step self-tour without starting the MCP stdio server.
-- `--tui`: Launch the Bubble Tea terminal presentation viewer (standalone with `--demo`, or connected via WebSocket to `--ws-addr`).
+- `--tui`: Launch the Bubble Tea terminal presentation viewer (standalone with `--demo`, or auto-discovering active sessions via the session registry).
 
 ### 4. Antigravity & Antigravity IDE Integration
 
