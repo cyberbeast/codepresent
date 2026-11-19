@@ -47,6 +47,8 @@ go run ./cmd/codepresent --demo --tui
 * Controls: `space`/`p` (play/pause), `←`/`→` or `h`/`l` (prev/next), `↑`/`↓` or `j`/`k` (scroll), `1`–`9` (jump to step), `q` (quit).
 * To attach the TUI to a separate running `codepresent` MCP server over WebSocket, run `go run ./cmd/codepresent --tui`.
 
+![codepresent Terminal TUI demo](docs/tui-demo.gif)
+
 #### Option B: VS Code / Cursor Extension (`F5`)
 
 1. Start the Go server in demo mode:
@@ -57,6 +59,8 @@ go run ./cmd/codepresent --demo --tui
    - `.vscode/tasks.json` compiles `editors/vscode` automatically.
    - `.vscode/launch.json` launches an Extension Development Host window that connects to `ws://127.0.0.1:9123/ws`.
 3. Use **Play / Pause / Prev / Next / Stop** or click any step in the left storyboard timeline to jump between files and spotlighted code ranges.
+
+![codepresent VS Code extension demo](docs/vscode-demo.gif)
 
 ### 3. Connecting an MCP Client
 
