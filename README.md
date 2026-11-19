@@ -47,6 +47,8 @@ go run ./cmd/codepresent --demo --tui
 * Controls: `space`/`p` (play/pause), `←`/`→` or `h`/`l` (prev/next), `↑`/`↓` or `j`/`k` (scroll), `1`–`9` (jump to step), `q` (quit).
 * To attach the TUI to a separate running `codepresent` MCP server over WebSocket, run `go run ./cmd/codepresent --tui`.
 
+![codepresent Terminal TUI demo](docs/tui-demo.gif)
+
 #### Option B: VS Code / Cursor Extension (`F5`)
 
 1. Start the Go server in demo mode:
